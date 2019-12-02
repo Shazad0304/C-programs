@@ -1,0 +1,102 @@
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#define TEXT_SZ 256
+#define MSG_SZ 240
+
+
+struct shared_use_st{
+	char message[TEXT_SZ];
+};
+int Create_SharedMemory()  //Function creates a shareed mempry using the IPC command
+{
+	void *shared_memory = (void *)0;
+	struct shared_use_st *shared_stuff;
+	int shmid;
+
+	srand((unsigned int)getpid());
+
+	shmid = shmget((key_t)1234, sizeof(struct shared_use_st), 0666 | IPC_CREAT);
+
+	if(shmid == -1){
+		fprintf(stderr, "shmget failed\n");
+		exit(EXIT_FAILURE);
+	}
+
+	shared_memory = shmat(shmid, (void *)0, 0);
+	if(shared_memory == (void *)-1){
+		fprintf(stderr, "shmat failed\n");
+		exit(EXIT_FAILURE);
+	}
+	
+    ///Shared Memory Created
+	printf("Memory attached at %X\n", (int)shared_memory);
+    
+
+	exit(EXIT_SUCCESS);
+	
+	return 0;
+}
+void *receivemsg_function(void *arg)
+{
+	int running = 1;
+	void *shared_memory = (void *)0;
+    struct shared_use_st *shared_stuff;
+    char msg[MSG_SZ];
+	shared_stuff = (struct shared_use_st *)shared_memory;
+	while(running)
+	{
+	      sleep(10);
+		  if(strncmp(shared_stuff->message, "-SERVER-", 8) == 0)
+		  {
+		  	  strcpy(msg,&message[16]);
+			  printf("Message Recieved: %d",msg);
+			  shared_stuff->message= "";
+		  }
+		  
+		//Check if message is for All then print messaae on its own terminal too
+		else if(strncmp(shared_stuff->message, "All", 3) == 0)
+		{
+			strcpy(msg,&message[16]);
+		    printf("Message: %d",msg);
+		    shared_stuff->message= "";
+		}
+		
+		running=0;		
+	}
+	
+}
+int main() 
+{
+	char clientlist[23];
+	
+	int running=1;
+	void *shared_memory = (void *)0;
+	struct shared_use_st *shared_stuff;
+	shared_stuff = (struct shared_use_st *)shared_memory;
+	Create_SharedMemory();
+	int i=0;
+	while(running)
+	{
+		if(strncmp(shared_stuff->message, "CONNECT-", 8) == 0)
+		{
+			strcpy(clientlist[i],&message[8]); //Copying Client name in a list
+			i++;
+			shared_stuff->message= ""; //Emptying the messageboard so that it can be used for further communication processes		
+		}
+	}
+	
+	pthread_t receive_message;
+    pthread_create(&receive_message, NULL, receivemsg_function, (void*)(p));
+	
+	
+	//Detach Shared Memory
+	  if (shmdt(shared_memory) == -1)
+    {
+      fprintf(stderr, "shmdt failed\n");
+      exit(EXIT_FAILURE);
+    }
+    exit(EXIT_SUCCESS);
+	
+}
