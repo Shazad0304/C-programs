@@ -19,16 +19,20 @@ char src[8];
 
 void* input(struct shared_mem *share)   //thread for checking is the message is for me
 {
-    
+    int b = 0;
     while(running){
+if(strcmp(share->src,"updat")==0&&b==0){
+write(1,"Updated List",13);
+printf("\n");
+write(1,share->message,239);
+b=1;	
+}
 if(strcmp(share->dest,ok)==0){
 	sem_wait(&mutex);
 write(1,share->message,239);
-	strcpy(share->dest,"");
-	strcpy(share->message,"");
+	memset(share->dest,0,8);
  	memset(share->message,0,239);
-	strcpy(share->dest,"");
-	strcpy(share->src,"");
+	memset(share->src,0,8);
 sem_post(&mutex);
 	
 	printf("\n");

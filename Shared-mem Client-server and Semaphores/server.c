@@ -100,15 +100,15 @@ while(running){
 if(strcmp(sharedstuff->dest,"server") == 0)   //maintaining list of clients
 {
 	sem_wait(&mutex);
-	strcpy(sharedstuff->dest,"");
-	strcpy(sharedstuff->message,"");
+	memset(sharedstuff->dest,0,8);
+	memset(sharedstuff->message,0,239);
 	write(1,sharedstuff->src,8);
 	write(1," Joined",8);
 	insert(sharedstuff->src);
 	printf("\n");
-	strcpy(sharedstuff->src,"");
-	strcpy(sharedstuff->dest,"");
-	strcpy(sharedstuff->message,"");
+	memset(sharedstuff->src,0,8);
+	memset(sharedstuff->dest,0,8);
+	memset(sharedstuff->message,0,239);
 	sem_post(&mutex);
 }
 
@@ -116,7 +116,7 @@ else if(strcmp(sharedstuff->dest,"AList")==0)   //sending list of client to clie
 {
 	sem_wait(&mutex);
 	memset(sharedstuff->message,0,239);
-	strcpy(sharedstuff->dest,"");
+	memset(sharedstuff->dest,0,8);
 write(1,"list Requested By ",19);
 write(1,sharedstuff->src,8);
 printf("\n");
@@ -129,15 +129,16 @@ put_clients_in_msg(sharedstuff->message);
 else if(strcmp(sharedstuff->dest,"AQuit")==0)   //deleting client who is not active any more
 {
 	sem_wait(&mutex);
-	strcpy(sharedstuff->dest,"");
-	strcpy(sharedstuff->message,"");
+	memset(sharedstuff->dest,0,8);
+	memset(sharedstuff->message,0,239);
 write(1,"Quit ",5);
 write(1,sharedstuff->src,8);
 printf("\n");
 delete(sharedstuff->src);
-	strcpy(sharedstuff->src,"");
-	strcpy(sharedstuff->dest,"");
-	strcpy(sharedstuff->message,"");
+	strcpy(sharedstuff->src,"updat");
+	memset(sharedstuff->dest,0,8);
+	memset(sharedstuff->message,0,239);
+put_clients_in_msg(sharedstuff->message);
 	sem_post(&mutex);
 }
 
@@ -146,6 +147,7 @@ delete(sharedstuff->src);
 pthread_join(pid,NULL);   
 sem_destroy(&mutex);   //destroying semaphore
 shmdt(shareobj);  //deattaching sherd memory
+shmctl(shmid, IPC_RMID, 0);
 exit(0);
 
 }
